@@ -14,7 +14,7 @@ export default function Home() {
     const token = localStorage.getItem("access_token")
     if (token) {
       // Verify token is still valid by making a test API call
-      fetch("http://127.0.0.1:8000/gmail/profile", {
+      fetch("https://email-agent-backendd.vercel.app/gmail/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
           accept: "application/json",

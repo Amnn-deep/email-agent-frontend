@@ -55,7 +55,7 @@ export default function ComposeEmail({ onClose, replyTo }: ComposeEmailProps) {
         ...(replyTo?.messageId && { in_reply_to: replyTo.messageId }),
       }
 
-      const response = await fetch("http://127.0.0.1:8000/gmail/send-email", {
+      const response = await fetch("https://email-agent-backendd.vercel.app/gmail/send-email", {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -88,7 +88,7 @@ export default function ComposeEmail({ onClose, replyTo }: ComposeEmailProps) {
     setMessage("")
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/gmail/save-draft", {
+      const response = await fetch("https://email-agent-backendd.vercel.app/gmail/save-draft", {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(emailData),

@@ -68,7 +68,7 @@ export default function EmailDetail({ emailId, onBack }: EmailDetailProps) {
 
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/gmail/message/${emailId}?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${emailId}?token=${token}`, {
         headers: getAuthHeaders(),
       })
 
@@ -97,7 +97,7 @@ export default function EmailDetail({ emailId, onBack }: EmailDetailProps) {
 
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/gmail/ai-reply/${emailId}?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/ai-reply/${emailId}?token=${token}`, {
         method: "POST",
         headers: getAuthHeaders(),
       })

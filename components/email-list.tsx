@@ -210,7 +210,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
   const fetchEmailDetails = async (messageId: string): Promise<GmailMessageDetail | null> => {
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/gmail/message/${messageId}?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${messageId}?token=${token}`, {
         headers: getAuthHeaders(),
       })
 
@@ -232,7 +232,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/gmail/messages?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/messages?token=${token}`, {
         headers: getAuthHeaders(),
       })
 
@@ -293,7 +293,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/emails?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/emails?token=${token}`, {
         headers: getAuthHeaders(),
       })
 
@@ -321,7 +321,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/reply?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/reply?token=${token}`, {
         method: "POST",
         headers: getAuthHeaders(),
       })

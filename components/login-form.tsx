@@ -31,7 +31,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/token", {
+      const response = await fetch("https://email-agent-backendd.vercel.app/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/register", {
+      const response = await fetch("https://email-agent-backendd.vercel.app/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/verify-email?token=${verificationToken}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/verify-email?token=${verificationToken}`, {
         method: "GET",
         headers: {
           accept: "application/json",
@@ -128,7 +128,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/resend-verification?email=${registerData.email}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/resend-verification?email=${registerData.email}`, {
         method: "POST",
         headers: {
           accept: "application/json",

@@ -36,7 +36,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/resend-verification?email=${userEmail}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/resend-verification?email=${userEmail}`, {
         method: "POST",
         headers: getAuthHeaders(),
       })
@@ -63,7 +63,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/reset-gmail-tokens/${userEmail}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/reset-gmail-tokens/${userEmail}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
@@ -91,7 +91,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/admin/delete-user?email=${deleteEmail}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/admin/delete-user?email=${deleteEmail}`, {
         method: "DELETE",
         headers: {
           accept: "application/json",
@@ -118,7 +118,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
   }
 
   const connectGmail = () => {
-    window.open("http://127.0.0.1:8000/gmail/authorize", "_blank")
+    window.open("https://email-agent-backendd.vercel.app/gmail/authorize", "_blank")
   }
 
   useEffect(() => {

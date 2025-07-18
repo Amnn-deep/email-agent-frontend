@@ -41,7 +41,7 @@ export default function EmailDashboard({ onLogout }: EmailDashboardProps) {
   const checkGmailConnection = async () => {
     try {
       const token = localStorage.getItem("access_token")
-      const response = await fetch(`http://127.0.0.1:8000/gmail/profile?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/profile?token=${token}`, {
         headers: getAuthHeaders(),
       })
 
@@ -63,7 +63,7 @@ export default function EmailDashboard({ onLogout }: EmailDashboardProps) {
     setMessage("")
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/gmail/authorize", {
+      const response = await fetch("https://email-agent-backendd.vercel.app/gmail/authorize", {
         headers: getAuthHeaders(),
       })
 
@@ -71,7 +71,7 @@ export default function EmailDashboard({ onLogout }: EmailDashboardProps) {
         // This would typically redirect to Google OAuth
         setMessage("Redirecting to Google for authorization...")
         // In a real implementation, this would open a popup or redirect
-        window.open("http://127.0.0.1:8000/gmail/authorize", "_blank")
+        window.open("https://email-agent-backendd.vercel.app/gmail/authorize", "_blank")
       } else {
         setError("Failed to initiate Gmail connection")
       }
