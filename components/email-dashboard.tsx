@@ -26,34 +26,14 @@ function EmailDashboard() {
   const [error, setError] = useState("");
 
   // Dummy functions for demonstration; replace with real logic as needed
-  const connectGmail = () => {
-    setIsLoading(true);
-    setError("");
-    // Simulate async connect
-    setTimeout(() => {
-      setIsGmailConnected(true);
-      setIsLoading(false);
-      setError("");
-    }, 1000);
-  };
-  const checkGmailConnection = () => {
-    // Simulate check
-    setError("");
-  };
-  const handleLogout = () => {
-    setIsGmailConnected(false);
-    setGmailProfile(null);
-    setError("");
-  };
+  const connectGmail = () => {};
+  const checkGmailConnection = () => {};
+  const handleLogout = () => {};
 
   useEffect(() => {
-    setSidebarOpen(false);
-    setError(""); // Clear error on mount
+    // Ensure client-only logic is handled here
+    setSidebarOpen(false); // Example: Reset sidebar state on mount
   }, []);
-
-  useEffect(() => {
-    setError(""); // Clear error when tab changes
-  }, [activeTab]);
 
   function renderContent() {
     if (activeTab === "profile") {
@@ -201,17 +181,16 @@ function EmailDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* Only show error if not connected and not loading */}
-          {error && !isGmailConnected && !isLoading && (
-            <Alert variant="destructive" className="m-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           {message && (
             <Alert className="m-4">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert variant="destructive" className="m-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           {renderContent()}
