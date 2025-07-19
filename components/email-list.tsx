@@ -236,6 +236,19 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         headers: getAuthHeaders(),
       })
 
+      if (response.status === 401) {
+        // Unauthorized: clear token and prompt reconnect
+        localStorage.removeItem("access_token")
+        setError("Session expired. Please reconnect your Gmail account.")
+        setGmailMessages([])
+        return
+      }
+      if (response.status === 500) {
+        setError("Server error. Please try again later.")
+        setGmailMessages([])
+        return
+      }
+
       if (response.ok) {
         const data = await response.json()
         const messages: GmailMessage[] = data.messages || []
@@ -276,11 +289,14 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         }
 
         setGmailMessages(enhancedMessages)
+        setError("") // Clear error on success
       } else {
         setError("Failed to fetch Gmail messages")
+        setGmailMessages([])
       }
     } catch (err) {
       setError("Network error. Please try again.")
+      setGmailMessages([])
     } finally {
       setIsLoading(false)
     }
