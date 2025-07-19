@@ -445,7 +445,17 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </Alert>
       )}
 
-      {error && (
+
+      {/* Show loading message if loading, else show error if present */}
+      {isLoading ? (
+        <Alert>
+          <Mail className="h-4 w-4 animate-bounce" />
+          <AlertDescription>
+            Please wait, your emails are loading...
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {!isLoading && error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
