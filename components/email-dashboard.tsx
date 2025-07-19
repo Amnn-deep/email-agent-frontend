@@ -25,15 +25,46 @@ function EmailDashboard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Dummy functions for demonstration; replace with real logic as needed
-  const connectGmail = () => {};
-  const checkGmailConnection = () => {};
-  const handleLogout = () => {};
+  // Connect Gmail logic (replace with real API call in production)
+  const connectGmail = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      // Simulate API call for Gmail connect
+      // Replace this with your real OAuth or backend call
+      // Example: await fetch('/api/connect-gmail')
+      setTimeout(() => {
+        setIsGmailConnected(true);
+        setIsLoading(false);
+        setError("");
+      }, 1000);
+    } catch (err) {
+      setError("Failed to connect Gmail");
+      setIsLoading(false);
+    }
+  };
+
+  // Check Gmail connection (replace with real API call in production)
+  const checkGmailConnection = async () => {
+    setError("");
+    // Optionally, check token validity here
+  };
+
+  // Logout logic
+  const handleLogout = () => {
+    setIsGmailConnected(false);
+    setGmailProfile(null);
+    setError("");
+  };
 
   useEffect(() => {
-    // Ensure client-only logic is handled here
-    setSidebarOpen(false); // Example: Reset sidebar state on mount
+    setSidebarOpen(false);
+    setError("");
   }, []);
+
+  useEffect(() => {
+    setError("");
+  }, [activeTab]);
 
   function renderContent() {
     if (activeTab === "profile") {
@@ -181,16 +212,17 @@ function EmailDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
+          {/* Only show error if not connected and not loading */}
+          {error && !isGmailConnected && !isLoading && (
+            <Alert variant="destructive" className="m-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           {message && (
             <Alert className="m-4">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          )}
-          {error && (
-            <Alert variant="destructive" className="m-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
           {renderContent()}
