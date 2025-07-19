@@ -60,8 +60,8 @@ function EmailDashboard() {
   useEffect(() => {
     setSidebarOpen(false);
     setError("");
-    // Automatically connect Gmail on mount if not already connected
-    if (!isGmailConnected) {
+    // Automatically connect to Gmail on mount if not already connected or loading
+    if (!isGmailConnected && !isLoading) {
       connectGmail();
     }
   }, []);
