@@ -459,7 +459,13 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error.includes('500') || error.toLowerCase().includes('server')
+                  ? 'Server error. Please check your connection or try again later.'
+                  : error.includes('401')
+                    ? 'Authentication error. Please log in again.'
+                    : error}
+              </AlertDescription>
             </Alert>
           )}
         </>
