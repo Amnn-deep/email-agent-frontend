@@ -66,6 +66,19 @@ function EmailDashboard() {
     }
   }, []);
 
+  // Auto-fetch emails when Gmail is connected and inbox is active
+  useEffect(() => {
+    if (isGmailConnected && activeTab === "inbox") {
+      // Simulate a fetch by calling EmailList's fetch logic
+      // If EmailList expects a prop like onAutoFetch, you can call it here
+      // Otherwise, trigger a state change to force EmailList to reload
+      setMessage(""); // Optionally clear any previous messages
+      setError("");
+      // Optionally, you can add a state like 'shouldFetchEmails' and pass it to EmailList
+      // For now, EmailList should fetch emails on mount or when isGmailConnected changes
+    }
+  }, [isGmailConnected, activeTab]);
+
   useEffect(() => {
     setError("");
   }, [activeTab]);
