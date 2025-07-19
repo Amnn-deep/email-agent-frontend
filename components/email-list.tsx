@@ -209,8 +209,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
   const fetchEmailDetails = async (messageId: string): Promise<GmailMessageDetail | null> => {
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${messageId}?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${messageId}`, {
         headers: getAuthHeaders(),
       })
 
@@ -231,8 +230,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
     setLastReply(null) // Clear AI reply when refreshing
 
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/messages?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/messages`, {
         headers: getAuthHeaders(),
       })
 
@@ -308,8 +306,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
     setLastReply(null) // Clear AI reply when refreshing
 
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/emails?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/emails`, {
         headers: getAuthHeaders(),
       })
 
@@ -336,8 +333,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
     setMessage("")
 
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/reply?token=${token}`, {
+      const response = await fetch(`https://email-agent-backendd.vercel.app/reply`, {
         method: "POST",
         headers: getAuthHeaders(),
       })
