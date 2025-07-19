@@ -40,19 +40,21 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-24 w-24 sm:h-32 sm:w-32 border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-y-auto">
-      {isAuthenticated ? (
-        <EmailDashboard onLogout={() => setIsAuthenticated(false)} />
-      ) : (
-        <LoginForm onLogin={() => setIsAuthenticated(true)} />
-      )}
+    <div className="min-h-screen bg-gray-50 overflow-y-auto flex flex-col items-center px-2 sm:px-4 md:px-8">
+      <div className="w-full max-w-md sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl flex flex-col flex-1">
+        {isAuthenticated ? (
+          <EmailDashboard onLogout={() => setIsAuthenticated(false)} />
+        ) : (
+          <LoginForm onLogin={() => setIsAuthenticated(true)} />
+        )}
+      </div>
     </div>
   )
 }
