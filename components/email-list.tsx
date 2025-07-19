@@ -213,6 +213,13 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         headers: getAuthHeaders(),
       })
 
+      if (response.status === 401) {
+        localStorage.removeItem("access_token")
+        setError("Session expired. Please reconnect your Gmail account.")
+        setGmailMessages([])
+        return null
+      }
+
       if (response.ok) {
         return await response.json()
       }
@@ -310,6 +317,13 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         headers: getAuthHeaders(),
       })
 
+      if (response.status === 401) {
+        localStorage.removeItem("access_token")
+        setError("Session expired. Please reconnect your Gmail account.")
+        setSimpleEmails([])
+        return
+      }
+
       if (response.ok) {
         const emails = await response.json()
         const emailsWithIndex = emails.map((subject: string, index: number) => ({
@@ -337,6 +351,13 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         method: "POST",
         headers: getAuthHeaders(),
       })
+
+      if (response.status === 401) {
+        localStorage.removeItem("access_token")
+        setError("Session expired. Please reconnect your Gmail account.")
+        setLastReply(null)
+        return
+      }
 
       if (response.ok) {
         const data = await response.json()
