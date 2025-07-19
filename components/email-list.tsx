@@ -446,7 +446,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       )}
 
 
-      {/* Show loading message if loading, else show error if present */}
+      {/* Show loading message if loading, hide error and empty state while loading */}
       {isLoading ? (
         <Alert>
           <Mail className="h-4 w-4 animate-bounce" />
@@ -454,12 +454,15 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
             Please wait, your emails are loading...
           </AlertDescription>
         </Alert>
-      ) : null}
-      {!isLoading && error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      ) : (
+        <>
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </>
       )}
 
       {/* Last Reply Card */}
@@ -583,25 +586,17 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </div>
       )}
 
-      {/* Empty State: Only show if not loading and no emails and (error or just empty) */}
-      {!isLoading && gmailMessages.length === 0 && simpleEmails.length === 0 && (
+      {/* Empty State: Only show if not loading and no emails and no error */}
+      {!isLoading && !error && gmailMessages.length === 0 && simpleEmails.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <Mail className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No emails found</h3>
             <p className="text-gray-600 mb-4">
-              {error
-                ? (isGmailConnected
-                    ? "There was an error loading your Gmail messages."
-                    : "There was an error loading your emails.")
-                : (isGmailConnected
-                    ? "Your Gmail inbox appears to be empty."
-                    : "Connect your Gmail account to see your emails here.")}
+              {isGmailConnected
+                ? "Your Gmail inbox appears to be empty."
+                : "Connect your Gmail account to see your emails here."}
             </p>
-            <Button onClick={isGmailConnected ? fetchGmailMessages : fetchSimpleEmails}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
           </CardContent>
         </Card>
       )}
