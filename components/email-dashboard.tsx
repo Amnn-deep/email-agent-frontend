@@ -89,7 +89,14 @@ function EmailDashboard() {
     } else if (selectedEmailId) {
       return <EmailDetail emailId={selectedEmailId} onBack={() => setSelectedEmailId(null)} />;
     } else {
-      return <EmailList onSelectEmail={setSelectedEmailId} isGmailConnected={isGmailConnected} />;
+      // Force remount of EmailList when isGmailConnected changes to ensure fresh fetch
+      return (
+        <EmailList
+          key={isGmailConnected ? "gmail-connected" : "gmail-disconnected"}
+          onSelectEmail={setSelectedEmailId}
+          isGmailConnected={isGmailConnected}
+        />
+      );
     }
   }
 
