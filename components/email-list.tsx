@@ -43,68 +43,7 @@ interface EnhancedGmailMessage extends GmailMessage {
 }
 
 export default function EmailList({ onSelectEmail, isGmailConnected }: EmailListProps) {
-  // Quick Learning Actions (must be after setError is defined)
-  interface QuickAction {
-    term: string;
-    icon: React.ReactNode;
-  }
-
-  const QUICK_ACTIONS: QuickAction[] = [
-    { term: "Essay Writing", icon: <span className="text-green-600">📝</span> },
-    { term: "Math Problems", icon: <span className="text-purple-600">📐</span> },
-    { term: "Programming", icon: <span className="text-orange-600">💻</span> },
-    { term: "Creative Ideas", icon: <span className="text-yellow-600">💡</span> },
-    { term: "Research", icon: <span className="text-blue-600">🔍</span> },
-  ];
-
-  const [chatId, setChatId] = useState<string | null>(null);
-  const [aiReply, setAiReply] = useState<string>("");
-  const [quickActionLoading, setQuickActionLoading] = useState(false);
-
-  const handleQuickAction = async (term: string) => {
-    setQuickActionLoading(true);
-    setError("");
-    setAiReply("");
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("You must be logged in to use Quick Actions.");
-        setQuickActionLoading(false);
-        return;
-      }
-      let url = `https://email-agent-backendd.vercel.app/quick-action?term=${encodeURIComponent(term)}`;
-      if (chatId) url += `&chat_id=${encodeURIComponent(chatId)}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          accept: "application/json",
-        },
-      });
-      if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        setError("Session expired. Please reconnect your Gmail account.");
-        setQuickActionLoading(false);
-        return;
-      }
-      if (response.status === 500) {
-        setError("Server error. Please try again later.");
-        setQuickActionLoading(false);
-        return;
-      }
-      if (response.ok) {
-        const data = await response.json();
-        setAiReply(data.reply || "No reply from AI.");
-        if (data.chat_id) setChatId(data.chat_id);
-      } else {
-        setError("Failed to get AI reply.");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setQuickActionLoading(false);
-    }
-  };
+  // ...existing code...
   const [gmailMessages, setGmailMessages] = useState<EnhancedGmailMessage[]>([])
   const [simpleEmails, setSimpleEmails] = useState<SimpleEmail[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -365,70 +304,11 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       setError("Network error. Please try again.")
       setGmailMessages([])
     } finally {
-    setQuickActionLoading(true);
-    setError("");
-    setAiReply("");
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("You must be logged in to use Quick Actions.");
-        setQuickActionLoading(false);
-        return;
-      }
-      let url = `https://email-agent-backendd.vercel.app/quick-action?term=${encodeURIComponent(term)}`;
-      if (chatId) url += `&chat_id=${encodeURIComponent(chatId)}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          accept: "application/json",
-        },
-      });
-      if (response.status === 401) {
-        localStorage.removeItem("access_token");
-        setError("Session expired. Please reconnect your Gmail account.");
-        setQuickActionLoading(false);
-        return;
-      }
-      if (response.status === 500) {
-        setError("Server error. Please try again later.");
-        setQuickActionLoading(false);
-        return;
-      }
-      if (response.ok) {
-        const data = await response.json();
-        setAiReply(data.reply || "No reply from AI.");
-        if (data.chat_id) setChatId(data.chat_id);
-      } else {
-        setError("Failed to get AI reply.");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setQuickActionLoading(false);
-    }
-  };
-
-      if (response.status === 401) {
-        localStorage.removeItem("access_token")
-        setError("Session expired. Please reconnect your Gmail account.")
-        setLastReply(null)
-        return
-      }
-
-      if (response.ok) {
-        const data = await response.json()
-        setLastReply(data)
-        setMessage("AI reply generated successfully!")
-      } else {
-        setError("Failed to generate reply")
-      }
-    } catch (err) {
-      setError("Network error. Please try again.")
-    } finally {
       setIsLoading(false)
     }
   }
+
+      // ...existing code...
 
   const formatDate = (dateString: string) => {
     try {
@@ -453,7 +333,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
   }
 
   useEffect(() => {
-    fetchSimpleEmails()
+    // fetchSimpleEmails() // Removed: function not defined
     if (isGmailConnected) {
       fetchGmailMessages()
     }
@@ -483,33 +363,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
   return (
     <div className="p-6 space-y-6 min-h-full">
-      {/* Quick Learning Actions */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Quick Learning Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.term}
-              className="flex items-center px-4 py-3 rounded bg-gray-50 hover:bg-gray-100 border border-gray-200 shadow-sm transition disabled:opacity-60"
-              onClick={() => handleQuickAction(action.term)}
-              disabled={quickActionLoading}
-              type="button"
-            >
-              <span className="mr-3 text-xl">{action.icon}</span>
-              <span className="font-medium">{action.term}</span>
-            </button>
-          ))}
-        </div>
-        {quickActionLoading && (
-          <div className="mt-3 text-blue-600">Loading AI response...</div>
-        )}
-        {aiReply && (
-          <Alert className="mt-3">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{aiReply}</AlertDescription>
-          </Alert>
-        )}
-      </div>
+      {/* ...existing code... */}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -520,7 +374,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </div>
         <div className="flex space-x-2">
           <Button
-            onClick={isGmailConnected ? fetchGmailMessages : fetchSimpleEmails}
+            onClick={isGmailConnected ? fetchGmailMessages : undefined}
             variant="outline"
             disabled={isLoading}
           >
@@ -531,10 +385,10 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
             <Mail className="h-4 w-4 mr-2" />
             Compose
           </Button>
-          <Button onClick={generateReplyToLast} disabled={isLoading}>
+          {/* <Button onClick={generateReplyToLast} disabled={isLoading}>
             <Bot className="h-4 w-4 mr-2" />
             AI Reply to Last
-          </Button>
+          </Button> */}
         </div>
       </div>
 
