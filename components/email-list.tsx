@@ -87,6 +87,11 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         setQuickActionLoading(false);
         return;
       }
+      if (response.status === 404) {
+        setError("This feature is currently unavailable. Please try again later.");
+        setQuickActionLoading(false);
+        return;
+      }
       if (response.status === 500) {
         setError("Server error. Please try again later.");
         setQuickActionLoading(false);
