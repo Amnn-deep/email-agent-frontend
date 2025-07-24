@@ -95,6 +95,7 @@ function EmailDashboard() {
           key={isGmailConnected ? "gmail-connected" : "gmail-disconnected"}
           onSelectEmail={setSelectedEmailId}
           isGmailConnected={isGmailConnected}
+          setGmailConnected={setIsGmailConnected}
         />
       );
     }

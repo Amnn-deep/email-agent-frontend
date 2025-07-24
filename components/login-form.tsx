@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +22,14 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
 
+  // Auto-login if token exists in localStorage
+  useEffect(() => {
+    const token = localStorage.getItem("login_token")
+    if (token) {
+      onLogin()
+    }
+  }, [onLogin])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -43,7 +49,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem("access_token", data.access_token)
+        localStorage.setItem("login_token", data.access_token)
         localStorage.setItem("user_email", loginData.email)
         setMessage("Login successful!")
         setTimeout(() => onLogin(), 1000)

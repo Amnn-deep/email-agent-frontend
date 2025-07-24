@@ -38,6 +38,11 @@ export default function Home() {
     }
   }, [])
 
+  // Function to start Gmail OAuth flow
+  const handleGmailLogin = () => {
+    window.location.href = "https://email-agent-backendd.vercel.app/gmail/authorize"
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -52,7 +57,17 @@ export default function Home() {
         {isAuthenticated ? (
           <EmailDashboard onLogout={() => setIsAuthenticated(false)} />
         ) : (
-          <LoginForm onLogin={() => setIsAuthenticated(true)} />
+          <>
+            <LoginForm onLogin={() => setIsAuthenticated(true)} />
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={handleGmailLogin}
+                className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
+              >
+                Connect Gmail with Google OAuth
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

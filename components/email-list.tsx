@@ -12,6 +12,7 @@ import ComposeEmail from "@/components/compose-email"
 interface EmailListProps {
   onSelectEmail: (emailId: string) => void
   isGmailConnected: boolean
+  setGmailConnected: (connected: boolean) => void
 }
 
 interface GmailMessage {
@@ -42,8 +43,7 @@ interface EnhancedGmailMessage extends GmailMessage {
   categoryColor?: string
 }
 
-export default function EmailList({ onSelectEmail, isGmailConnected }: EmailListProps) {
-  // ...existing code...
+export default function EmailList({ onSelectEmail, isGmailConnected, setGmailConnected }: EmailListProps) {
   const [gmailMessages, setGmailMessages] = useState<EnhancedGmailMessage[]>([])
   const [simpleEmails, setSimpleEmails] = useState<SimpleEmail[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -51,6 +51,21 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
   const [message, setMessage] = useState("")
   const [lastReply, setLastReply] = useState<any>(null)
   const [showCompose, setShowCompose] = useState(false)
+
+  // Handle OAuth callback parameters
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const success = params.get("success")
+      const email = params.get("email")
+      if (success === "true" && email) {
+        setGmailConnected(true)
+        setMessage(`Gmail account linked successfully for ${email}`)
+        window.history.replaceState({}, document.title, window.location.pathname)
+        fetchGmailMessages()
+      }
+    }
+  }, [setGmailConnected])
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("access_token")
@@ -65,11 +80,9 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
     const from = email.from.toLowerCase()
     const snippet = email.snippet.toLowerCase()
 
-    // Extract sender name
     const senderMatch = email.from.match(/^(.+?)\s*</)
     const senderName = senderMatch ? senderMatch[1].trim() : email.from.split("@")[0]
 
-    // Job-related emails
     if (from.includes("linkedin")) {
       if (subject.includes("job") || subject.includes("alert")) {
         return {
@@ -85,7 +98,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Gaming platforms
     if (from.includes("epic") || from.includes("steam") || from.includes("ubisoft")) {
       const platform = from.includes("epic") ? "Epic Games" : from.includes("steam") ? "Steam" : "Gaming Platform"
       if (subject.includes("sale") || subject.includes("offer")) {
@@ -102,7 +114,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // E-commerce
     if (from.includes("amazon") || from.includes("flipkart") || from.includes("myntra")) {
       const platform = from.includes("amazon") ? "Amazon" : from.includes("flipkart") ? "Flipkart" : "Shopping"
       if (subject.includes("order") || subject.includes("delivery")) {
@@ -126,7 +137,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Financial services
     if (from.includes("bank") || from.includes("paytm") || from.includes("phonepe") || from.includes("gpay")) {
       const service = from.includes("paytm")
         ? "Paytm"
@@ -149,7 +159,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Social media
     if (from.includes("facebook") || from.includes("instagram") || from.includes("twitter")) {
       const platform = from.includes("facebook") ? "Facebook" : from.includes("instagram") ? "Instagram" : "Twitter"
       return {
@@ -159,7 +168,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // GitHub/Development
     if (from.includes("github") || from.includes("gitlab") || from.includes("stackoverflow")) {
       const platform = from.includes("github") ? "GitHub" : from.includes("gitlab") ? "GitLab" : "Stack Overflow"
       return {
@@ -169,12 +177,9 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Newsletter/Marketing
     if (from.includes("noreply") || from.includes("no-reply") || subject.includes("newsletter")) {
-      // Try to extract company name from email domain
       const domain = email.from.split("@")[1]?.split(".")[0] || "Newsletter"
       const companyName = domain.charAt(0).toUpperCase() + domain.slice(1)
-
       if (subject.includes("sale") || subject.includes("offer") || subject.includes("deal")) {
         return {
           name: `${companyName} Promotion`,
@@ -189,7 +194,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Personal emails
     if (!from.includes("noreply") && !from.includes("no-reply") && !email.from.includes("<")) {
       return {
         name: `Personal - ${senderName}`,
@@ -198,9 +202,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       }
     }
 
-    // Default case - use subject or sender
     const shortSubject = email.subject.length > 30 ? email.subject.substring(0, 30) + "..." : email.subject
-
     return {
       name: shortSubject || `Email from ${senderName}`,
       category: "General",
@@ -215,8 +217,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       })
 
       if (response.status === 401) {
-        localStorage.removeItem("access_token")
-        setError("Session expired. Please reconnect your Gmail account.")
+        setError("Session expired or invalid credentials. Please reconnect Gmail.")
         setGmailMessages([])
         return null
       }
@@ -235,7 +236,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
     setIsLoading(true)
     setError("")
-    setLastReply(null) // Clear AI reply when refreshing
+    setLastReply(null)
 
     try {
       const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/messages`, {
@@ -243,9 +244,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       })
 
       if (response.status === 401) {
-        // Unauthorized: clear token and prompt reconnect
-        localStorage.removeItem("access_token")
-        setError("Session expired. Please reconnect your Gmail account.")
+        setError("Session expired or invalid credentials. Please reconnect Gmail.")
         setGmailMessages([])
         return
       }
@@ -259,11 +258,8 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         const data = await response.json()
         const messages: GmailMessage[] = data.messages || []
 
-        // Fetch details for first few messages to generate friendly names
         const enhancedMessages: EnhancedGmailMessage[] = []
-
         for (const message of messages.slice(0, 10)) {
-          // Limit to first 10 for performance
           const details = await fetchEmailDetails(message.id)
           if (details) {
             const friendlyInfo = generateFriendlyName(details)
@@ -284,7 +280,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
           }
         }
 
-        // Add remaining messages without details for now
         for (const message of messages.slice(10)) {
           enhancedMessages.push({
             ...message,
@@ -295,7 +290,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         }
 
         setGmailMessages(enhancedMessages)
-        setError("") // Clear error on success
+        setError("")
       } else {
         setError("Failed to fetch Gmail messages")
         setGmailMessages([])
@@ -307,8 +302,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       setIsLoading(false)
     }
   }
-
-      // ...existing code...
 
   const formatDate = (dateString: string) => {
     try {
@@ -333,7 +326,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
   }
 
   useEffect(() => {
-    // fetchSimpleEmails() // Removed: function not defined
     if (isGmailConnected) {
       fetchGmailMessages()
     }
@@ -351,9 +343,14 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => window.location.reload()} className="mt-4">
+            <Button
+              onClick={() => {
+                window.location.href = "https://email-agent-backendd.vercel.app/gmail/authorize"
+              }}
+              className="mt-4"
+            >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Connect Gmail
+              Connect to Google
             </Button>
           </CardContent>
         </Card>
@@ -363,8 +360,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
 
   return (
     <div className="p-6 space-y-6 min-h-full">
-      {/* ...existing code... */}
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Inbox</h2>
@@ -385,14 +380,9 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
             <Mail className="h-4 w-4 mr-2" />
             Compose
           </Button>
-          {/* <Button onClick={generateReplyToLast} disabled={isLoading}>
-            <Bot className="h-4 w-4 mr-2" />
-            AI Reply to Last
-          </Button> */}
         </div>
       </div>
 
-      {/* Messages */}
       {message && (
         <Alert>
           <CheckCircle className="h-4 w-4" />
@@ -400,8 +390,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </Alert>
       )}
 
-
-      {/* Show loading message if loading, hide error and empty state while loading */}
       {isLoading ? (
         <Alert>
           <Mail className="h-4 w-4 animate-bounce" />
@@ -412,21 +400,33 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
       ) : (
         <>
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {error.includes('500') || error.toLowerCase().includes('server')
-                  ? 'Server error. Please check your connection or try again later.'
-                  : error.includes('401')
-                    ? 'Authentication error. Please log in again.'
-                    : error}
-              </AlertDescription>
-            </Alert>
+            <>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {error.includes('500') || error.toLowerCase().includes('server')
+                    ? 'Server error. Please check your connection or try again later.'
+                    : error.includes('401')
+                      ? 'Authentication error. Please reconnect Gmail.'
+                      : error}
+                </AlertDescription>
+              </Alert>
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={() => {
+                    window.location.href = "https://email-agent-backendd.vercel.app/gmail/authorize"
+                  }}
+                  variant="outline"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Reconnect to Google
+                </Button>
+              </div>
+            </>
           )}
         </>
       )}
 
-      {/* Last Reply Card */}
       {lastReply && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
@@ -462,7 +462,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </Card>
       )}
 
-      {/* Gmail Messages */}
       {isGmailConnected && gmailMessages.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center">
@@ -517,7 +516,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </div>
       )}
 
-      {/* Simple Emails */}
       {simpleEmails.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center">
@@ -547,7 +545,6 @@ export default function EmailList({ onSelectEmail, isGmailConnected }: EmailList
         </div>
       )}
 
-      {/* Empty State: Only show if not loading and no emails and no error */}
       {!isLoading && !error && gmailMessages.length === 0 && simpleEmails.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
