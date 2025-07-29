@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Mail, Shield, Trash2, RefreshCw, CheckCircle, AlertCircle, ExternalLink } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
+import { GmailTokenManager } from "@/lib/GmailTokenManager"
 
 interface UserProfileProps {
   gmailProfile: any
@@ -36,7 +38,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/resend-verification?email=${userEmail}`, {
+      const response = await fetch(`${API_BASE_URL}/resend-verification?email=${userEmail}`, {
         method: "POST",
         headers: getAuthHeaders(),
       })
@@ -63,7 +65,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/reset-gmail-tokens/${userEmail}`, {
+      const response = await fetch(`${API_BASE_URL}/reset-gmail-tokens/${userEmail}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       })
@@ -91,7 +93,7 @@ export default function UserProfile({ gmailProfile }: UserProfileProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/admin/delete-user?email=${deleteEmail}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/delete-user?email=${deleteEmail}`, {
         method: "DELETE",
         headers: {
           accept: "application/json",

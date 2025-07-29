@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Mail, RefreshCw, Bot, AlertCircle, CheckCircle, ExternalLink, User, Calendar, X } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
 import ComposeEmail from "@/components/compose-email"
+import { GmailTokenManager } from "@/lib/gmail-tokens"
 
 interface EmailListProps {
   onSelectEmail: (emailId: string) => void
@@ -52,13 +54,62 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
   const [lastReply, setLastReply] = useState<any>(null)
   const [showCompose, setShowCompose] = useState(false)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const MESSAGES_PER_PAGE = 10
+
+  // Load cached emails/messages on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedList = localStorage.getItem("gmail_message_list")
+      const cachedDetails = localStorage.getItem("gmail_message_details")
+      if (cachedList && cachedDetails) {
+        try {
+          const list = JSON.parse(cachedList)
+          const details = JSON.parse(cachedDetails)
+          setGmailMessages(list)
+          // Optionally, you could merge details into list if needed
+        } catch {}
+      }
+    }
+  }, [])
+
+  // Save to cache whenever gmailMessages changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && gmailMessages.length > 0) {
+      localStorage.setItem("gmail_message_list", JSON.stringify(gmailMessages))
+      // Optionally, cache details separately if you want
+      // localStorage.setItem("gmail_message_details", JSON.stringify(detailsArray))
+    }
+  }, [gmailMessages])
+
+  // Pagination logic
+  const paginatedMessages = gmailMessages.slice(currentPage * MESSAGES_PER_PAGE, (currentPage + 1) * MESSAGES_PER_PAGE)
+
+  // Pagination controls
+  const hasPrev = currentPage > 0
+  const hasNext = (currentPage + 1) * MESSAGES_PER_PAGE < gmailMessages.length
+
   // Handle OAuth callback parameters
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
       const success = params.get("success")
       const email = params.get("email")
-      if (success === "true" && email) {
+      // Support both 'access_token' and 'token' for access token
+      const accessToken = params.get("access_token") || params.get("token")
+      const refreshToken = params.get("refresh_token") || params.get("refreshToken")
+      const tokenExpiry = params.get("token_expiry") || params.get("expiry")
+      
+      if (success === "true" && email && accessToken) {
+        // Store the tokens properly
+        GmailTokenManager.storeTokens({
+          accessToken,
+          refreshToken: refreshToken || undefined,
+          tokenExpiry: tokenExpiry || undefined,
+          userEmail: email,
+        })
+        
         setGmailConnected(true)
         setMessage(`Gmail account linked successfully for ${email}`)
         window.history.replaceState({}, document.title, window.location.pathname)
@@ -67,11 +118,24 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
     }
   }, [setGmailConnected])
 
+  // Check for valid tokens on mount and set Gmail as connected if found
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const tokens = GmailTokenManager.getTokens();
+      if (tokens && GmailTokenManager.isTokenValid()) {
+        setGmailConnected(true);
+      }
+    }
+  }, [setGmailConnected]);
+
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("access_token")
-    return {
-      Authorization: `Bearer ${token}`,
-      accept: "application/json",
+    try {
+      return GmailTokenManager.getAuthHeaders()
+    } catch (error) {
+      // If tokens are invalid, disconnect Gmail
+      setGmailConnected(false)
+      GmailTokenManager.clearTokens()
+      return {}
     }
   }
 
@@ -211,41 +275,66 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
   }
 
   const fetchEmailDetails = async (messageId: string): Promise<GmailMessageDetail | null> => {
+    // Always get the token from GmailTokenManager
+    let headers: any = {};
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${messageId}`, {
-        headers: getAuthHeaders(),
-      })
-
-      if (response.status === 401) {
-        setError("Session expired or invalid credentials. Please reconnect Gmail.")
-        setGmailMessages([])
-        return null
-      }
-
-      if (response.ok) {
-        return await response.json()
-      }
+      headers = GmailTokenManager.getAuthHeaders();
     } catch (err) {
-      console.error(`Failed to fetch details for message ${messageId}:`, err)
+      setError("Missing or invalid token. Please reconnect Gmail.");
+      setGmailConnected(false);
+      GmailTokenManager.clearTokens();
+      return null;
     }
-    return null
+    try {
+      // DO NOT append ?token=... to the URL!
+      const response = await fetch(`${API_BASE_URL}/gmail/message/${messageId}`, {
+        headers,
+      });
+      if (response.status === 401) {
+        setError("Session expired or invalid credentials. Please reconnect Gmail.");
+        setGmailMessages([]);
+        setGmailConnected(false);
+        GmailTokenManager.clearTokens();
+        return null;
+      }
+      if (response.ok) {
+        return await response.json();
+      }
+      console.error(`Failed to fetch details for message ${messageId}:`, response.status);
+      return null;
+    } catch (err) {
+      console.error(`Failed to fetch details for message ${messageId}:`, err);
+      return null;
+    }
   }
 
   const fetchGmailMessages = async () => {
     if (!isGmailConnected) return
 
+    if (!GmailTokenManager.isTokenValid()) {
+      setError("Session expired or invalid credentials. Please reconnect Gmail.")
+      setGmailMessages([])
+      setGmailConnected(false)
+      GmailTokenManager.clearTokens()
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     setError("")
     setLastReply(null)
+    setGmailMessages([]) // Clear previous messages
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/messages`, {
+      const response = await fetch(`${API_BASE_URL}/gmail/messages`, {
         headers: getAuthHeaders(),
       })
 
       if (response.status === 401) {
         setError("Session expired or invalid credentials. Please reconnect Gmail.")
         setGmailMessages([])
+        setGmailConnected(false)
+        GmailTokenManager.clearTokens()
         return
       }
       if (response.status === 500) {
@@ -258,45 +347,26 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
         const data = await response.json()
         const messages: GmailMessage[] = data.messages || []
 
-        const enhancedMessages: EnhancedGmailMessage[] = []
-        for (const message of messages.slice(0, 10)) {
+        // Incrementally add each message as soon as its details are loaded
+        messages.slice(0, 10).forEach(async (message) => {
           const details = await fetchEmailDetails(message.id)
           if (details) {
             const friendlyInfo = generateFriendlyName(details)
-            enhancedMessages.push({
-              ...message,
-              details,
-              friendlyName: friendlyInfo.name,
-              category: friendlyInfo.category,
-              categoryColor: friendlyInfo.color,
-            })
-          } else {
-            enhancedMessages.push({
-              ...message,
-              friendlyName: `Email ${message.id.substring(0, 8)}...`,
-              category: "Unknown",
-              categoryColor: "bg-gray-100 text-gray-800",
-            })
+            setGmailMessages((prev) => [
+              ...prev,
+              {
+                ...message,
+                details,
+                friendlyName: friendlyInfo.name,
+                category: friendlyInfo.category,
+                categoryColor: friendlyInfo.color,
+              },
+            ])
           }
-        }
-
-        for (const message of messages.slice(10)) {
-          enhancedMessages.push({
-            ...message,
-            friendlyName: `Email ${message.id.substring(0, 8)}...`,
-            category: "Unknown",
-            categoryColor: "bg-gray-100 text-gray-800",
-          })
-        }
-
-        setGmailMessages(enhancedMessages)
-        setError("")
-      } else {
-        setError("Failed to fetch Gmail messages")
-        setGmailMessages([])
+        })
       }
     } catch (err) {
-      setError("Network error. Please try again.")
+      setError("Failed to fetch Gmail messages.")
       setGmailMessages([])
     } finally {
       setIsLoading(false)
@@ -326,8 +396,13 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
   }
 
   useEffect(() => {
-    if (isGmailConnected) {
+    if (isGmailConnected && GmailTokenManager.isTokenValid()) {
       fetchGmailMessages()
+    } else if (isGmailConnected && !GmailTokenManager.isTokenValid()) {
+      // If connected but tokens are invalid, disconnect
+      setGmailConnected(false)
+      GmailTokenManager.clearTokens()
+      setError("Session expired. Please reconnect Gmail.")
     }
   }, [isGmailConnected])
 
@@ -345,7 +420,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
           <CardContent className="text-center">
             <Button
               onClick={() => {
-                window.location.href = "https://email-agent-backendd.vercel.app/gmail/authorize"
+                window.location.href = `${API_BASE_URL}/gmail/authorize`
               }}
               className="mt-4"
             >
@@ -414,7 +489,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
               <div className="flex justify-center mt-4">
                 <Button
                   onClick={() => {
-                    window.location.href = "https://email-agent-backendd.vercel.app/gmail/authorize"
+                    window.location.href = `${API_BASE_URL}/gmail/authorize`
                   }}
                   variant="outline"
                 >
@@ -469,7 +544,7 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
             Gmail Messages
           </h3>
           <div className="grid gap-4">
-            {gmailMessages.map((message) => (
+            {paginatedMessages.map((message) => (
               <Card
                 key={message.id}
                 className="cursor-pointer hover:shadow-md transition-shadow"
@@ -513,6 +588,12 @@ export default function EmailList({ onSelectEmail, isGmailConnected, setGmailCon
               </Card>
             ))}
           </div>
+          {hasPrev && (
+            <Button variant="outline" onClick={() => setCurrentPage(prev => prev - 1)}>Previous</Button>
+          )}
+          {hasNext && (
+            <Button variant="outline" onClick={() => setCurrentPage(prev => prev + 1)}>Next</Button>
+          )}
         </div>
       )}
 

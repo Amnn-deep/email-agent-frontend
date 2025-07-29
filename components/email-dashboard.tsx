@@ -52,10 +52,15 @@ function EmailDashboard() {
 
   // Logout logic
   const handleLogout = () => {
-    setIsGmailConnected(false);
-    setGmailProfile(null);
-    setError("");
-  };
+    // Clear all relevant tokens and user info from localStorage
+    localStorage.removeItem("gmail_access_token")
+    localStorage.removeItem("gmail_message_list")
+    localStorage.removeItem("gmail_user_email")
+    localStorage.removeItem("login_token")
+    localStorage.removeItem("user_email")
+    // Optionally clear any other app-specific keys here
+    window.location.href = "/"
+  }
 
   useEffect(() => {
     setSidebarOpen(false);

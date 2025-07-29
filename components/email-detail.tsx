@@ -20,7 +20,9 @@ import {
   Hash,
   MessageSquare,
 } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
 import ComposeEmail from "@/components/compose-email"
+import { GmailTokenManager } from "@/lib/gmail-tokens"
 
 interface EmailDetailProps {
   emailId: string
@@ -67,9 +69,11 @@ export default function EmailDetail({ emailId, onBack }: EmailDetailProps) {
     setError("")
 
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/message/${emailId}?token=${token}`, {
-        headers: getAuthHeaders(),
+      // Use the correct token from GmailTokenManager
+      const headers = GmailTokenManager.getAuthHeaders();
+      console.log('GmailTokenManager.getTokens() before fetch:', GmailTokenManager.getTokens());
+      const response = await fetch(`${API_BASE_URL}/gmail/message/${emailId}`, {
+        headers,
       })
 
       if (response.ok) {
@@ -96,10 +100,23 @@ export default function EmailDetail({ emailId, onBack }: EmailDetailProps) {
     setMessage("")
 
     try {
-      const token = localStorage.getItem("access_token")
-      const response = await fetch(`https://email-agent-backendd.vercel.app/gmail/ai-reply/${emailId}?token=${token}`, {
+      // Use login_token (JWT) for Authorization header, Google token for query param
+      const loginToken = localStorage.getItem("login_token");
+      const tokens = GmailTokenManager.getTokens();
+      const googleToken = tokens ? tokens.accessToken : null;
+      if (!loginToken || !googleToken) {
+        setError("Missing authentication. Please log in again.");
+        setIsGeneratingReply(false);
+        return;
+      }
+      const headers = {
+        Authorization: `Bearer ${loginToken}`,
+        "Content-Type": "application/json",
+        accept: "application/json",
+      };
+      const response = await fetch(`${API_BASE_URL}/gmail/ai-reply/${emailId}?token=${googleToken}`, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers,
       })
 
       if (response.ok) {

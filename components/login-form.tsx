@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, Lock, CheckCircle, AlertCircle } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
 
 interface LoginFormProps {
   onLogin: () => void
@@ -22,11 +23,26 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [showVerification, setShowVerification] = useState(false)
 
-  // Auto-login if token exists in localStorage
+  // Auto-login if token exists in localStorage and is not expired
   useEffect(() => {
     const token = localStorage.getItem("login_token")
     if (token) {
-      onLogin()
+      // Decode JWT and check expiry
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]))
+        const now = Math.floor(Date.now() / 1000)
+        if (payload.exp && payload.exp > now) {
+          onLogin()
+        } else {
+          // Token expired: remove and redirect
+          localStorage.removeItem("login_token")
+          window.location.href = "/login"
+        }
+      } catch (e) {
+        // Invalid token: remove and redirect
+        localStorage.removeItem("login_token")
+        window.location.href = "/login"
+      }
     }
   }, [onLogin])
 
@@ -37,7 +53,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch("https://email-agent-backendd.vercel.app/token", {
+      const response = await fetch(`${API_BASE_URL}/token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +86,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch("https://email-agent-backendd.vercel.app/register", {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,7 +118,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/verify-email?token=${verificationToken}`, {
+      const response = await fetch(`${API_BASE_URL}/verify-email?token=${verificationToken}`, {
         method: "GET",
         headers: {
           accept: "application/json",
@@ -134,7 +150,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setMessage("")
 
     try {
-      const response = await fetch(`https://email-agent-backendd.vercel.app/resend-verification?email=${registerData.email}`, {
+      const response = await fetch(`${API_BASE_URL}/resend-verification?email=${registerData.email}`, {
         method: "POST",
         headers: {
           accept: "application/json",

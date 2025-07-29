@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Send, X, AlertCircle, CheckCircle } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
 
 interface ComposeEmailProps {
   onClose: () => void
@@ -55,7 +56,7 @@ export default function ComposeEmail({ onClose, replyTo }: ComposeEmailProps) {
         ...(replyTo?.messageId && { in_reply_to: replyTo.messageId }),
       }
 
-      const response = await fetch("https://email-agent-backendd.vercel.app/gmail/send-email", {
+      const response = await fetch(`${API_BASE_URL}/gmail/send-email`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -88,7 +89,7 @@ export default function ComposeEmail({ onClose, replyTo }: ComposeEmailProps) {
     setMessage("")
 
     try {
-      const response = await fetch("https://email-agent-backendd.vercel.app/gmail/save-draft", {
+      const response = await fetch(`${API_BASE_URL}/gmail/save-draft`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(emailData),
